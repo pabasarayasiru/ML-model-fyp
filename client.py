@@ -16,10 +16,6 @@ URI = "wss://health-app-wifi-csi-monitoring.onrender.com"
 CSI_FILE_PATH = "csi_data_2026-01-14_16-57-17_kalpana_front_01.csv"
 
 
-def custom_round(value):
-    return int(value) + (1 if value - int(value) >= 0.5 else 0)
-
-
 async def send_data():
 
     windows = get_heart_rate_windows(CSI_FILE_PATH)
@@ -50,7 +46,6 @@ async def send_data():
 
                     heart_rate = predict_heart_rate_from_window(window)
 
-                    # RR model stays same: it uses latest 30 seconds internally
                     respiration_rate = predict_respiration_rate(CSI_FILE_PATH)
 
                     if heart_rate is None:
@@ -66,8 +61,8 @@ async def send_data():
                     message = {
                         "type": "health_data",
                         "payload": {
-                            "heart_rate": custom_round(heart_rate),
-                            "respiration_rate": custom_round(respiration_rate),
+                            "heart_rate": round(float(heart_rate), 2),
+                            "respiration_rate": round(float(respiration_rate), 2),
                             "posture": random.choice(
                                 ["supine", "prone", "left", "right"]
                             )
