@@ -61,7 +61,7 @@ def load_csi_csv(path):
     })
 
 
-def split_windows(df):
+def split_windows(df, window_seconds=60, step_seconds=1):
     if df.empty:
         return []
 
@@ -73,8 +73,8 @@ def split_windows(df):
 
     current = start
 
-    while current < end:
-        next_time = current + pd.Timedelta(seconds=WINDOW_SECONDS)
+    while current + pd.Timedelta(seconds=window_seconds) <= end:
+        next_time = current + pd.Timedelta(seconds=window_seconds)
 
         window = df[
             (df["date_time"] >= current) &
@@ -84,7 +84,8 @@ def split_windows(df):
         if not window.empty:
             windows.append(window)
 
-        current = next_time
+        # overlap step
+        current = current + pd.Timedelta(seconds=step_seconds)
 
     return windows
 
@@ -259,5 +260,5 @@ def predict_heart_rate_from_window(window):
 
 def get_heart_rate_windows(csi_file_path):
     csi_df = load_csi_csv(csi_file_path)
-    windows = split_windows(csi_df)
+    windows = split_windows(csi_df, window_seconds=60, step_seconds=1)
     return windows
