@@ -106,6 +106,8 @@ from respiration_model import (
 
 from posture_model import predict_posture_from_file
 
+from presence_model import predict_presence_from_file
+
 
 URI = "wss://health-app-wifi-csi-monitoring.onrender.com"
 CSI_FILE_PATH = "csi/csi_data_2026-05-04_15-50-17_pramod_right_01.csv"
@@ -125,6 +127,14 @@ async def send_data():
     print("Final predicted posture:", posture)    
     print("Total HR windows:", len(heart_windows))
     print("Total RR windows:", len(resp_windows))
+
+    presence = predict_presence_from_file(CSI_FILE_PATH)
+
+    if presence is None:
+        print("Presence prediction failed")
+        return
+
+    print("Final predicted presence:", presence)
 
     total_windows = min(len(heart_windows), len(resp_windows))
 
@@ -173,10 +183,11 @@ async def send_data():
                     print(
                         f"HR: {heart_rate} | "
                         f"RR: {respiration_rate} | "
-                        f"Posture: {posture}"
+                        f"Posture: {posture} | "
+                        f"Presence: {presence}"
                     )
 
-                    if heart_rate is None or respiration_rate is None or posture is None:
+                    if heart_rate is None or respiration_rate is None or posture is None or presence is None:
                         print("Skipping invalid prediction")
                         index += 1
                         continue
@@ -187,6 +198,7 @@ async def send_data():
                             "heart_rate": round(float(heart_rate), 2),
                             "respiration_rate": round(float(respiration_rate), 2),
                             "posture": posture ,
+                            "presence": presence,
                             "timestamp": datetime.now(timezone.utc).isoformat()
                         }
                     }
