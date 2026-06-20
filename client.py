@@ -107,6 +107,7 @@ from respiration_model import (
 
 
 URI = "wss://health-app-wifi-csi-monitoring.onrender.com"
+# URI = "ws://35.244.49.43:3000"
 CSI_FILE_PATH = "csi/csi_data_2026-01-14_16-57-17_kalpana_front_01.csv"
 
 
