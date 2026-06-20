@@ -17,6 +17,10 @@ from respiration_model import (
     predict_respiration_rate_from_window
 )
 
+from posture_model import predict_posture_from_file
+from presence_model import predict_presence_from_file
+
+
 URI = "wss://health-app-wifi-csi-monitoring.onrender.com"
 
 CSI_FOLDER = r"C:\Users\ASUS\Documents\esp-csi\examples\get-started\tools"
@@ -77,12 +81,27 @@ async def predict_and_send(websocket, csv_file):
         print("Invalid prediction")
         return
 
+    posture = predict_posture_from_file(csv_file)
+    presence = predict_presence_from_file(csv_file)
+
+    if posture is None:
+        print("Posture prediction failed")
+        return
+
+    if presence is None:
+        print("Presence prediction failed")
+        return
+
     message = {
         "type": "health_data",
         "payload": {
             "heart_rate": round(float(heart_rate), 2),
             "respiration_rate": round(float(respiration_rate), 2),
-            "posture": random.choice(["supine", "prone", "left", "right"]),
+
+            "posture": posture.lower(),
+
+            "presence": presence,
+
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     }
