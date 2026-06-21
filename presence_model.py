@@ -125,8 +125,8 @@ import numpy as np
 # ==============================
 # SETTINGS
 # ==============================
-WINDOW_SECONDS = 30
-MIN_ROWS = 10
+WINDOW_SECONDS = 10
+MIN_ROWS = 5
 
 THRESHOLD = -50.0
 DIRECTION = "lower"
@@ -134,8 +134,8 @@ DIRECTION = "lower"
 MIN_VALID_RSSI = -100
 MAX_VALID_RSSI = -20
 
-PRESENCE_CONFIRM_COUNT = 5
-ABSENCE_CONFIRM_COUNT = 5
+PRESENCE_CONFIRM_COUNT = 1
+ABSENCE_CONFIRM_COUNT = 1
 
 
 class LivePresenceDetector:

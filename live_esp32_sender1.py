@@ -18,7 +18,7 @@ from respiration_model import (
 )
 
 from posture_model import predict_posture_from_file
-from presence_model import LivePresenceDetector
+# from presence_model import LivePresenceDetector
 
 
 URI = "wss://health-app-wifi-csi-monitoring.onrender.com"
@@ -30,6 +30,19 @@ TEMP_FIXED_FILE = r"csi\live_fixed_csi_data.csv"
 SEND_INTERVAL_SECONDS = 2
 MIN_ROWS = 300
 
+######
+PRESENCE_THRESHOLD = -50.0
+
+
+def detect_presence(rssi):
+    try:
+        rssi = float(rssi)
+    except:
+        return "absence"
+
+    return "presence" if rssi < PRESENCE_THRESHOLD else "absence"
+########
+
 CORRECT_COLUMNS = [
     "date_time", "type", "id", "mac", "rssi", "rate", "sig_mode", "mcs",
     "bandwidth", "smoothing", "not_sounding", "aggregation", "stbc",
@@ -39,9 +52,9 @@ CORRECT_COLUMNS = [
 ]
 
 # NEW PRESENCE VARIABLES
-presence_detector = LivePresenceDetector()
-rssi_data = pd.DataFrame()
-rssi_index = 0
+# presence_detector = LivePresenceDetector()
+# rssi_data = pd.DataFrame()
+# rssi_index = 0
 
 
 def get_latest_csv_file():
@@ -69,41 +82,41 @@ def fix_csv_header(source_file):
 
 
 # NEW FUNCTION FOR LIVE PRESENCE DETECTOR
-def load_rssi_data(file_path):
-    df = pd.read_csv(file_path)
+# def load_rssi_data(file_path):
+#     df = pd.read_csv(file_path)
 
-    if "rssi" not in df.columns:
-        raise ValueError("rssi column not found in CSV file")
+#     if "rssi" not in df.columns:
+#         raise ValueError("rssi column not found in CSV file")
 
-    if "Date_Time" in df.columns:
-        df["presence_time"] = pd.to_datetime(
-            df["Date_Time"],
-            errors="coerce"
-        )
-    elif "date_time" in df.columns:
-        df["presence_time"] = pd.to_datetime(
-            df["date_time"],
-            errors="coerce"
-        )
-    elif "Date_time" in df.columns:
-        df["presence_time"] = pd.to_datetime(
-            df["Date_time"],
-            errors="coerce"
-        )
-    else:
-        df["presence_time"] = None
+#     if "Date_Time" in df.columns:
+#         df["presence_time"] = pd.to_datetime(
+#             df["Date_Time"],
+#             errors="coerce"
+#         )
+#     elif "date_time" in df.columns:
+#         df["presence_time"] = pd.to_datetime(
+#             df["date_time"],
+#             errors="coerce"
+#         )
+#     elif "Date_time" in df.columns:
+#         df["presence_time"] = pd.to_datetime(
+#             df["Date_time"],
+#             errors="coerce"
+#         )
+#     else:
+#         df["presence_time"] = None
 
-    return (
-        df[["presence_time", "rssi"]]
-        .dropna(subset=["rssi"])
-        .reset_index(drop=True)
-    )
+#     return (
+#         df[["presence_time", "rssi"]]
+#         .dropna(subset=["rssi"])
+#         .reset_index(drop=True)
+#     )
 
 
 async def predict_and_send(websocket, csv_file):
-    global rssi_data
-    global rssi_index
-    global presence_detector
+    # global rssi_data
+    # global rssi_index
+    # global presence_detector
 
     heart_windows = get_heart_rate_windows(csv_file)
     resp_windows = get_respiration_windows(csv_file)
@@ -128,49 +141,83 @@ async def predict_and_send(websocket, csv_file):
         print("Posture prediction failed")
         return
 
-    # ===== NEW PRESENCE DETECTION =====
-    if len(rssi_data) == 0:
-        try:
-            rssi_data = load_rssi_data(csv_file)
-            rssi_index = 0
-        except Exception as e:
-            print("RSSI load error:", e)
-            return
+    # # ===== NEW PRESENCE DETECTION =====
+    # if len(rssi_data) == 0:
+    #     try:
+    #         rssi_data = load_rssi_data(csv_file)
+    #         rssi_index = 0
+    #     except Exception as e:
+    #         print("RSSI load error:", e)
+    #         return
 
-    if len(rssi_data) == 0:
-        print("No RSSI data found")
-        return
+    # if len(rssi_data) == 0:
+    #     print("No RSSI data found")
+    #     return
 
-    if rssi_index >= len(rssi_data):
-        rssi_index = 0
+    # if rssi_index >= len(rssi_data):
+    #     rssi_index = 0
 
-    rssi_row = rssi_data.iloc[rssi_index]
+    # rssi_row = rssi_data.iloc[rssi_index]
 
-    timestamp = rssi_row["presence_time"]
+    # timestamp = rssi_row["presence_time"]
 
-    if pd.isna(timestamp):
-        timestamp = datetime.now()
+    # if pd.isna(timestamp):
+    #     timestamp = datetime.now()
 
-    presence_result = presence_detector.update(
-        timestamp,
-        rssi_row["rssi"]
-    )
+    # presence_result = presence_detector.update(
+    #     timestamp,
+    #     rssi_row["rssi"]
+    # )
 
-    presence = presence_result.get(
-        "final_prediction",
-        "absence"
-    )
+    # presence = presence_result.get(
+    #     "final_prediction",
+    #     "absence"
+    # )
 
-    print(
-        f"Presence: {presence} | "
-        f"Presence details: {presence_result}"
-    )
+    # print(
+    #     f"Presence: {presence} | "
+    #     f"Presence details: {presence_result}"
+    # )
 
-    rssi_index += 1
+    # rssi_index += 1
     # ===== END NEW PRESENCE DETECTION =====
 
+    # ===== SIMPLE PRESENCE DETECTION =====
+
+    df = pd.read_csv(csv_file)
+
+    latest_rssi = float(
+        df["rssi"].dropna().iloc[-1]
+    )
+
+    presence = detect_presence(latest_rssi)
+
+    print(
+        f"RSSI: {latest_rssi} | "
+        f"Threshold: {PRESENCE_THRESHOLD} | "
+        f"Presence: {presence}"
+    )
+
+    # ===== END SIMPLE PRESENCE DETECTION =====
+
+    # if presence.lower() != "presence":
+    #     print("Person absent. Skipping payload sending.")
+    #     return
+    
     if presence.lower() != "presence":
-        print("Person absent. Skipping payload sending.")
+        message = {
+            "type": "health_data",
+            "payload": {
+                "heart_rate": 0,
+                "respiration_rate": 0,
+                "posture": "unknown",
+                "presence": "absence",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        }
+
+        await websocket.send(json.dumps(message))
+        print("Sent absence payload:", message)
         return
 
     message = {
@@ -192,7 +239,7 @@ async def predict_and_send(websocket, csv_file):
 
 
 async def main():
-    global rssi_data
+    #global rssi_data
 
     print("Watching CSI folder:")
     print(CSI_FOLDER)
@@ -220,7 +267,7 @@ async def main():
                 fixed_csv, rows = fix_csv_header(source_csv)
 
                 # NEW
-                rssi_data = load_rssi_data(fixed_csv)
+                #rssi_data = load_rssi_data(fixed_csv)
 
                 print("Source CSV:", source_csv)
                 print("Fixed CSV:", fixed_csv)
