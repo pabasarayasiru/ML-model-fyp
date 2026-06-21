@@ -169,6 +169,10 @@ async def predict_and_send(websocket, csv_file):
     rssi_index += 1
     # ===== END NEW PRESENCE DETECTION =====
 
+    if presence.lower() != "presence":
+        print("Person absent. Skipping payload sending.")
+        return
+
     message = {
         "type": "health_data",
         "payload": {
