@@ -27,7 +27,7 @@ SEND_INTERVAL_SECONDS = 2
 MIN_ROWS = 300
 
 ######
-PRESENCE_THRESHOLD = -50.0
+PRESENCE_THRESHOLD = -49.0
 
 
 def detect_presence(rssi):
